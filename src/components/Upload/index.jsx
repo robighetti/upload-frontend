@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 
 import { DropContainer, UploadMessage } from './styles'
 
-function Upload({ onUpload }) {
+function Upload({ onUpload, ref }) {
   const {
     getRootProps,
     getInputProps,
@@ -29,7 +29,7 @@ function Upload({ onUpload }) {
       isDragActive={isdragactive}
       isDragReject={isDragReject}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} ref={ref} />
       {renderDragMessage(isdragactive, isDragReject)}
     </DropContainer>
   )

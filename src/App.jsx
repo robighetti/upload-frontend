@@ -15,99 +15,52 @@ function App() {
   const [showProgress, setShowProgress] = useState(false)
   const fileInputRef = useRef(null)
 
-  // const getAllUploadedFiles = useMemo(() => {}, [])
-
   const handleUpload = (files) => {
-    /*  const data = files.map((file) => ({
-      file,
-      id: uuid(),
-      name: file.name,
-      readableSize: formatBytes(file.size),
-      preview: URL.createObjectURL(file),
-      progress: 0,
-      uploaded: false,
-      error: false,
-      url: null,
-    }))
+    const file = files[0]
 
-    setUploadedFiles(data)
-    handleUploads(data)
- */
-    // data.forEach(uploadProcess)
-    /* setUploadedFiles((prevState) => {
-      return [...prevState, uploadedFiledReceived]
-    })
+    if (!file) return
 
-    console.log(uploadedFiledReceived) */
-    // uploadedFiledReceived.forEach((item) => uploadProcess(item))
-  }
+    const fileName =
+      file.name.length > 12
+        ? `${file.name.substring(0, 13)}... .${file.name.split('.'[1])}`
+        : file.name
 
-  const handleUploads = (files) => {
-    console.log(files)
+    const formData = new FormData()
+    formData.append('file', file)
 
-    for (const file of files) {
-      const data = new FormData()
-
-      data.append('file', file.file, file.name)
-
-      api.post('posts', data, {
-        onUploadProgress: (e) => {
-          const progress = parseInt(Math.round((e.loaded * 100) / e.total))
-
-          const finalResult = files.map((item) => {
-            return file.id === item.id ? { ...item, progress } : item
-          })
-
-          setUploadedFiles(finalResult)
-        },
-      })
-    }
-  }
-
-  const uploadProcess = (updatedFile) => {
-    console.log('uploadProcess', updatedFile)
-    const data = new FormData()
-
-    data.append('file', updatedFile.file, updatedFile.name)
+    setFiles((prevState) => [...prevState, { name: fileName, loading: 0 }])
+    setShowProgress(true)
 
     api
-      .post('posts', data, {
-        onUploadProgress: (e) => {
-          const progress = parseInt(Math.round((e.loaded * 100) / e.total))
-          console.log('onUploadProgress', progress)
+      .post('http://localhost:3333/posts', formData, {
+        onUploadProgress: ({ loaded, total }) => {
+          setFiles((prevState) => {
+            const newFiles = [...prevState]
+            newFiles[newFiles.length - 1].loading = Math.round(
+              (loaded * 100) / total,
+            )
+            return newFiles
+          })
 
-          updateFile(updatedFile.id, progress)
+          if (loaded === total) {
+            const fileSize =
+              total < 1024
+                ? `${total} bytes`
+                : `${(loaded / (1024 * 1024)).toFixed(2)} MB`
+            setUploadedFiles([
+              ...uploadedFiles,
+              {
+                name: fileName,
+                size: fileSize,
+                preview: URL.createObjectURL(file),
+              },
+            ])
+            setFiles([])
+            setShowProgress(false)
+          }
         },
       })
-      .then((response) => {
-        // console.log('response', response)
-        /* updateFile(updatedFile.id, {
-          uploaded: true,
-          id: response.data._id,
-          url: response.data.url,
-        }) */
-      })
-      .catch((err) => {
-        console.log('error', err)
-
-        /* updateFile(updatedFile.id, {
-          uploaded: true,
-        }) */
-      })
-  }
-
-  const updateFile = (id, data) => {
-    console.log('updateFile', id, data)
-    console.log('uploadedFiles', uploadedFiles)
-
-    const result = uploadedFiles.map((uploadedFile) => {
-      return id === uploadedFile.id
-        ? { ...uploadedFile, ...data }
-        : uploadedFile
-    })
-
-    // setUploadedFiles(result)
-    // console.log(uploadedFiles)
+      .catch(console.error)
   }
 
   const formatBytes = (bytes, decimals = 2) => {
@@ -122,7 +75,7 @@ function App() {
   return (
     <Container>
       <Content>
-        <Upload onUpload={handleUpload} />
+        <Upload onUpload={handleUpload} ref={fileInputRef} />
         {!!uploadedFiles.length && <FileList files={uploadedFiles} />}
       </Content>
       <GlobalStyle />
