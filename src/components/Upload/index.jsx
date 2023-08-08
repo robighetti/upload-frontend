@@ -9,7 +9,7 @@ function Upload({ onUpload }) {
     getInputProps,
     isDragActive: isdragactive,
     isDragReject,
-  } = useDropzone({ onDrop: onUpload })
+  } = useDropzone({ onDropAccepted: onUpload })
 
   const renderDragMessage = (isDragActive, isDragReject) => {
     if (!isDragActive) {
